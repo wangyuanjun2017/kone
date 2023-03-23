@@ -1,0 +1,32 @@
+NACOS_HOST_ENV: ${NACOS_HOST:192.168.13.181:30077}
+NACOS_NAMESPACE_ENV: ${NACOS_NAMESPACE:29684f54-d3ce-4d1b-90a0-cdb9ad852fa3}
+NACOS_GROUP_ENV: ${NACOS_GROUP:kone}
+
+server:
+  port: 8207
+  servlet:
+    context-path: /pricing-web
+
+spring:
+  cloud:
+    nacos:
+      config:
+        # 命令空间 用来区分不同的环境(这里要填命名空间ID)
+        server-addr: ${NACOS_HOST_ENV}
+        namespace: ${NACOS_NAMESPACE_ENV}
+        group: ${NACOS_GROUP_ENV}
+        prefix: ${spring.application.name}
+        # 配置文件后缀（格式）
+        file-extension: yaml
+        enable-remote-sync-config: true
+        shared-configs:
+          - group: ${NACOS_GROUP_ENV}
+            refresh: true
+            dataId: kone-common-config.yml
+      discovery:
+        namespace: ${NACOS_NAMESPACE_ENV}
+        server-addr:  ${NACOS_HOST_ENV}
+        group: ${NACOS_GROUP_ENV}
+  application:
+    name: kone-pircing-web
+

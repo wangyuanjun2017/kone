@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.ava</groupId>
+        <artifactId>ava-starter-parent</artifactId>
+        <version>1.0.4-SNAPSHOT</version>
+        <relativePath/> <!-- lookup parent from repository -->
+    </parent>
+    <groupId>com.ava.kone</groupId>
+    <artifactId>kone-pricing-web</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <name>kone-pricing-web</name>
+    <description>kone saas web project for VB</description>
+
+    <properties>
+        <env>dev</env>
+        <ava-commons.version>1.0.0-SNAPSHOT</ava-commons.version>
+        <kone.version>${ava.env}-SNAPSHOT</kone.version>
+        <hutool.version>5.6.3</hutool.version>
+        <ava-seata.version>1.0.0-SNAPSHOT</ava-seata.version>
+    </properties>
+
+    <dependencies>
+        <!--链路追踪-->
+        <dependency>
+            <groupId>com.ava</groupId>
+            <artifactId>ava-web-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ava</groupId>
+            <artifactId>ava-log-tracer</artifactId>
+        </dependency>
+
+        <!-- third jars  -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-logging</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-log4j2</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-dubbo</artifactId>
+        </dependency>
+
+        <!-- nacos -->
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-collections4</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>fastjson</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- swaager-->
+        <dependency>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-boot-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.github.xiaoymin</groupId>
+            <artifactId>knife4j-spring-boot-starter</artifactId>
+        </dependency>
+
+        <!-- validation -->
+        <dependency>
+            <groupId>org.hibernate.validator</groupId>
+            <artifactId>hibernate-validator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>javax.el</groupId>
+            <artifactId>javax.el-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.web</groupId>
+            <artifactId>javax.el</artifactId>
+        </dependency>
+
+        <!-- second jars -->
+        <dependency>
+            <groupId>com.ava</groupId>
+            <artifactId>ava-commons</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ava</groupId>
+            <artifactId>ava-dubbo</artifactId>
+            <version>${ava-commons.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.ava</groupId>
+            <artifactId>ava-seata</artifactId>
+            <version>${ava-commons.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.ava</groupId>
+            <artifactId>ava-excel</artifactId>
+        </dependency>
+
+        <!-- kone business libs-->
+        <dependency>
+            <groupId>com.ava.kone</groupId>
+            <artifactId>kone-commons-core</artifactId>
+            <version>${kone.version}</version>
+        </dependency>
+
+        <!-- temp for paging -->
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-extension</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ava.kone</groupId>
+            <artifactId>kone-file-facade</artifactId>
+            <version>${kone.version}</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-all</artifactId>
+            <version>${hutool.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.ava.kone</groupId>
+            <artifactId>kone-inventory-facade</artifactId>
+            <version>${kone.version}</version>
+            <scope>compile</scope>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

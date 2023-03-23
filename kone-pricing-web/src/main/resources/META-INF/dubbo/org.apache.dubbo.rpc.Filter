@@ -1,0 +1,1 @@
+dubboConsumerContextFilter=com.ava.kone.commons.dubbo.DubboConsumerContextFilter

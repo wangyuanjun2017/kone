@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:dubbo="http://dubbo.apache.org/schema/dubbo"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://dubbo.apache.org/schema/dubbo
+       http://dubbo.apache.org/schema/dubbo/dubbo.xsd">
+
+    <!-- 应用配置，不要与提供方相同 -->
+    <dubbo:application name="fl-repay-app" owner="lipengd">
+        <dubbo:parameter key="qos.enable" value="false"/>
+    </dubbo:application>
+
+    <!-- 使用zookeeper广播注册中心暴露服务地址 -->
+    <dubbo:registry id="zkRegistry" protocol="zookeeper" address="${dubbo.registry.address}"
+                    port="2181" simplified="true" timeout="60000" />
+
+    <dubbo:metadata-report address="${dubbo.metadata-report.address}" cycle-report="false" retry-times="30" timeout="60000" />
+
+    <!-- 监控中心配置，使用zookeeper注册中心暴露服务地址 -->
+<!--    <dubbo:monitor protocol="registry"/>-->
+
+    <!--关闭服务消费方所有服务的启动检查。dubbo缺省会在启动时检查依赖的服务是否可用，不可用时会抛出异常，阻止Spring初始化完成。-->
+    <dubbo:consumer check="false" timeout="60000" registry="zkRegistry"/>
+
+</beans>

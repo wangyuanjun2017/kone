@@ -1,0 +1,67 @@
+spring:
+  application:
+    name: kone-pricing-web
+  profiles:
+    active: ${kone.env}
+  messages:
+    basename: i18n/messages
+    encoding: UTF-8
+  cloud:
+    # Spring Cloud Stream 配置项
+    stream:
+      rocketmq:
+        binder:
+          name-server:
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 20MB
+
+
+logging:
+  config: classpath:log4j2.xml
+
+dubbo:
+  enabled: true
+  protocol:
+    port: 28353
+    name: dubbo
+  consumer:
+    filter: dubboConsumerContextFilter
+    #启动时是否检查依赖的服务
+    check: false
+    validation: true
+    timeout: 30000
+  #注册中心
+  registry:
+    address: spring-cloud://${NACOS_HOST_ENV}
+    parameters:
+      namespace: ${NACOS_NAMESPACE_ENV}
+      group: ${NACOS_GROUP_ENV}
+
+#seata配置
+seata:
+  config:
+    nacos:
+      group: SEATA_GROUP
+      namespace: seata-namespace
+      server-addr: ${NACOS_HOST_ENV}
+    type: nacos
+  enabled: true
+  registry:
+    nacos:
+      application: seata-server
+      cluster: default
+      group: SEATA_GROUP
+      namespace: seata-namespace
+      server-addr: ${NACOS_HOST_ENV}
+    type: nacos
+  service:
+    disable-global-transaction: false
+    vgroup-mapping:
+      business_service_tx_group: default
+  tx-service-group: business_service_tx_group
+
+
+
+

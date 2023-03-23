@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:dubbo="http://dubbo.apache.org/schema/dubbo"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://dubbo.apache.org/schema/dubbo
+       http://dubbo.apache.org/schema/dubbo/dubbo.xsd">
+
+    <!-- 声明需要引用的服务接口 简化配置 可针对具体接口做个性化配置-->
+    <!-- 配置优先级:方法级大于接口大于全局,消费者大于生产者-->
+
+    <dubbo:reference id="demoApiService" interface="com.ava.kone.demo.api.DemoApiService"
+                     retries="0" check="false" version="1.0.0"/>
+
+
+
+</beans>

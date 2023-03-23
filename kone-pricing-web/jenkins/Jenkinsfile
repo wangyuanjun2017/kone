@@ -1,0 +1,223 @@
+pipeline {
+  agent {
+    node {
+      label 'maven'
+    }
+  }
+
+    parameters {
+        string(name:'TAG_NAME',defaultValue: '',description:'')
+    }
+
+   options{
+       buildDiscarder(logRotator(numToKeepStr: '5'))
+       quietPeriod(5)
+    }
+
+    environment {
+        KUBECONFIG_CREDENTIAL_ID = 'pipeline-user-kubeconfig'
+        HARBOR_CREDENTIAL_ID = 'pipeline-user-harbor'
+        APP_NAME = 'kone-pricing-web'
+        CONTAINER_PORT = '8207'
+        HEALTH_PATH = '/pricing-web/health/check'
+        CONTEXT_PATH = '/pricing-web'
+    }
+
+    stages {
+        stage ('checkout scm') {
+            steps {
+                checkout(scm)
+                script {
+                  sh 'wget http://192.168.13.78/paas-pub/pipeline/-/raw/master/docker/maven/Dockerfile'
+                  sh 'wget http://192.168.13.78/paas-pub/pipeline/-/raw/master/maven/setting/settings.xml'
+                }
+            }
+        }
+
+        stage ('build develop') {
+          when{
+            branch 'develop'
+          }
+          environment {
+            HARBOR_HOST = 'bytest-harbor.ava.com.cn'
+            HARBOR_NAMESPACE = 'kone-dev'
+            }
+            steps {
+                container ('maven') {
+                    sh 'mvn -U -Dmaven.test.skip=true -gs `pwd`/settings.xml -P dev clean package'
+                    sh 'docker build -f `pwd`/Dockerfile -t $HARBOR_HOST/$HARBOR_NAMESPACE/$APP_NAME:SNAPSHOT-$BRANCH_NAME-$BUILD_NUMBER .'
+                    withCredentials([usernamePassword(credentialsId : "$HARBOR_CREDENTIAL_ID" ,passwordVariable : 'HARBOR_PASSWORD' ,usernameVariable : 'HARBOR_USERNAME' ,)]) {
+                        sh 'echo "$HARBOR_PASSWORD" | docker login $HARBOR_HOST -u "$HARBOR_USERNAME" --password-stdin'
+                        sh 'docker push  $HARBOR_HOST/$HARBOR_NAMESPACE/$APP_NAME:SNAPSHOT-$BRANCH_NAME-$BUILD_NUMBER'
+                    }
+                }
+            }
+        }
+
+        stage ('build test') {
+          when{
+            branch 'test'
+          }
+          environment {
+            HARBOR_HOST = 'bytest-harbor.ava.com.cn'
+            HARBOR_NAMESPACE = 'kone-test'
+            }
+            steps {
+                container ('maven') {
+                    sh 'mvn -U -Dmaven.test.skip=true -gs `pwd`/settings.xml -P test clean package'
+                    sh 'docker build -f `pwd`/Dockerfile -t $HARBOR_HOST/$HARBOR_NAMESPACE/$APP_NAME:SNAPSHOT-$BRANCH_NAME-$BUILD_NUMBER .'
+                    withCredentials([usernamePassword(credentialsId : "$HARBOR_CREDENTIAL_ID" ,passwordVariable : 'HARBOR_PASSWORD' ,usernameVariable : 'HARBOR_USERNAME' ,)]) {
+                        sh 'echo "$HARBOR_PASSWORD" | docker login $HARBOR_HOST -u "$HARBOR_USERNAME" --password-stdin'
+                        sh 'docker push  $HARBOR_HOST/$HARBOR_NAMESPACE/$APP_NAME:SNAPSHOT-$BRANCH_NAME-$BUILD_NUMBER'
+                    }
+                }
+            }
+        }
+
+        stage ('build pre') {
+          when{
+            branch 'pre'
+          }
+          environment {
+            HARBOR_HOST = 'hw-harbor.ava.com.cn'
+            HARBOR_NAMESPACE = 'kone-pre'
+            }
+            steps {
+                container ('maven') {
+                    sh 'mvn -U -Dmaven.test.skip=true -gs `pwd`/settings.xml -P pre clean package'
+                    sh 'docker build -f `pwd`/Dockerfile -t $HARBOR_HOST/$HARBOR_NAMESPACE/$APP_NAME:SNAPSHOT-$BRANCH_NAME-$BUILD_NUMBER .'
+                    withCredentials([usernamePassword(credentialsId : "$HARBOR_CREDENTIAL_ID" ,passwordVariable : 'HARBOR_PASSWORD' ,usernameVariable : 'HARBOR_USERNAME' ,)]) {
+                        sh 'echo "$HARBOR_PASSWORD" | docker login $HARBOR_HOST -u "$HARBOR_USERNAME" --password-stdin'
+                        sh 'docker push  $HARBOR_HOST/$HARBOR_NAMESPACE/$APP_NAME:SNAPSHOT-$BRANCH_NAME-$BUILD_NUMBER'
+                    }
+                }
+            }
+        }
+
+        stage ('build prod') {
+          when{
+            tag "release-*"
+          }
+          environment {
+            HARBOR_HOST = 'hw-harbor.ava.com.cn'
+            HARBOR_NAMESPACE = 'kone-prod'
+            }
+            steps {
+                container ('maven') {
+                    sh 'mvn -U -Dmaven.test.skip=true -gs `pwd`/settings.xml -P prod clean package'
+                    sh 'docker build -f `pwd`/Dockerfile -t $HARBOR_HOST/$HARBOR_NAMESPACE/$APP_NAME:$BRANCH_NAME-$BUILD_NUMBER .'
+                    withCredentials([usernamePassword(credentialsId : "$HARBOR_CREDENTIAL_ID" ,passwordVariable : 'HARBOR_PASSWORD' ,usernameVariable : 'HARBOR_USERNAME' ,)]) {
+                        sh 'echo "$HARBOR_PASSWORD" | docker login $HARBOR_HOST -u "$HARBOR_USERNAME" --password-stdin'
+                        sh 'docker push $HARBOR_HOST/$HARBOR_NAMESPACE/$APP_NAME:$BRANCH_NAME-$BUILD_NUMBER'
+                    }
+                }
+            }
+        }
+
+        stage('deploy to develop') {
+          when{
+            branch 'develop'
+          }
+          environment {
+           NAMESPACE = 'kone-dev'
+           HARBOR_HOST = 'bytest-harbor.ava.com.cn'
+           HARBOR_NAMESPACE = 'kone-dev'
+           NACOS_HOST = 'nacos-hs.infrastructure-test:8848'
+           NACOS_NAMESPACE = '29684f54-d3ce-4d1b-90a0-cdb9ad852fa3'
+           NACOS_GROUP = 'kone'
+           SW_BACKEND = 'skw-oap.skywalking.svc.devcluster.local:11800'
+           }
+            steps {
+            container ('maven') {
+            withCredentials([
+            kubeconfigFile(
+                credentialsId: env.KUBECONFIG_CREDENTIAL_ID,
+                variable: 'KUBECONFIG')
+              ]) {
+              sh 'wget http://192.168.13.78/paas-pub/pipeline/-/raw/master/deploy/kone/maven/dev/deployment.yaml'
+              sh 'envsubst < `pwd`/deployment.yaml | kubectl apply -f -'
+            }
+         }
+      }
+    }
+        stage('deploy to test') {
+          when{
+            branch 'test'
+          }
+          environment {
+           NAMESPACE = 'kone-test'
+           HARBOR_HOST = 'bytest-harbor.ava.com.cn'
+           HARBOR_NAMESPACE = 'kone-test'
+           NACOS_HOST = 'nacos-hs.infrastructure-test:8848'
+           NACOS_NAMESPACE = 'fd7070bb-d5f9-4716-8b1d-a1c571f7be40'
+           NACOS_GROUP = 'kone'
+           SW_BACKEND = 'skw-oap.skywalking.svc.devcluster.local:11800'
+           }
+              steps {
+            container ('maven') {
+            withCredentials([
+            kubeconfigFile(
+                credentialsId: env.KUBECONFIG_CREDENTIAL_ID,
+                variable: 'KUBECONFIG')
+              ]) {
+              sh 'wget http://192.168.13.78/paas-pub/pipeline/-/raw/master/deploy/kone/maven/dev/deployment.yaml'
+              sh 'envsubst < `pwd`/deployment.yaml | kubectl apply -f -'
+            }
+         }
+      }
+    }
+        stage('deploy to pre') {
+          when{
+            branch 'pre'
+          }
+          environment {
+           NAMESPACE = 'kone-pre'
+           HARBOR_HOST = 'hw-harbor.ava.com.cn'
+           HARBOR_NAMESPACE = 'kone-pre'
+           NACOS_HOST = 'nacos-hs.infrastructure-pre:8848'
+           NACOS_NAMESPACE = 'd9b32e8c-a835-4df7-a287-f4514ce3f1df'
+           NACOS_GROUP = 'kone'
+           SW_BACKEND = 'skywalking-oap.infrastructure-pre:11800'
+           }
+              steps {
+            container ('maven') {
+            withCredentials([
+            kubeconfigFile(
+                credentialsId: env.KUBECONFIG_CREDENTIAL_ID,
+                variable: 'KUBECONFIG')
+              ]) {
+              sh 'wget http://192.168.13.78/paas-pub/pipeline/-/raw/master/deploy/kone/maven/pre/deployment.yaml'
+              sh 'envsubst < `pwd`/deployment.yaml | kubectl apply -f -'
+            }
+         }
+      }
+    }
+        stage('deploy to prod') {
+          when{
+            tag "release-*"
+          }
+          environment {
+           NAMESPACE = 'kone-prod'
+           HARBOR_NAMESPACE = 'kone-prod'
+           HARBOR_HOST = 'hw-harbor.ava.com.cn'
+           NACOS_HOST = 'nacos-hs.infrastructure-prod:8848'
+           NACOS_NAMESPACE = 'b6d7735d-ad66-4ace-a5bb-98ef0f6310db'
+           NACOS_GROUP = 'kone'
+           SW_BACKEND = 'skywalking-oap.infrastructure-prod:11800'
+           }
+              steps {
+            container ('maven') {
+            withCredentials([
+            kubeconfigFile(
+                credentialsId: env.KUBECONFIG_CREDENTIAL_ID,
+                variable: 'KUBECONFIG')
+              ]) {
+              sh 'wget http://192.168.13.78/paas-pub/pipeline/-/raw/master/deploy/kone/maven/prod/1c_2g/deployment.yaml'
+              sh 'envsubst < `pwd`/deployment.yaml | cat -'
+              sh 'envsubst < `pwd`/deployment.yaml | kubectl apply -f -'
+            }
+         }
+      }
+    }
+  }
+}
